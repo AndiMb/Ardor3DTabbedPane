@@ -174,22 +174,22 @@ public class ArdorPanel extends JPanel implements Scene, Updater, Runnable {
     }
 
     public void panelOpened() {
-        System.err.println("Opened");
+        System.out.println("Opened");
         exit = false;
         new Thread(this).start();
     }
 
     public void panelClosed() {
-        System.err.println("Closed");
+        System.out.println("Closed");
         exit = true;
     }
 
     protected void panelHidden() {
-        System.err.println("Hidden");
+        System.out.println("Hidden");
     }
 
     protected void panelShowing() {
-        System.err.println("Showing");
+        System.out.println("Showing");
     }
 
     private static void resizeCanvas(JoglSwingCanvas canvas) {
