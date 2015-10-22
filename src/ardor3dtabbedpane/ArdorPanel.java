@@ -11,13 +11,20 @@ import com.ardor3d.framework.FrameHandler;
 import com.ardor3d.framework.Scene;
 import com.ardor3d.framework.Updater;
 import com.ardor3d.framework.jogl.JoglCanvasRenderer;
+import com.ardor3d.framework.jogl.awt.JoglAwtCanvas;
+import com.ardor3d.framework.jogl.awt.JoglNewtAwtCanvas;
 import com.ardor3d.framework.jogl.awt.JoglSwingCanvas;
+import com.ardor3d.input.ControllerWrapper;
 import com.ardor3d.input.PhysicalLayer;
 import com.ardor3d.input.awt.AwtFocusWrapper;
 import com.ardor3d.input.awt.AwtKeyboardWrapper;
 import com.ardor3d.input.awt.AwtMouseManager;
 import com.ardor3d.input.awt.AwtMouseWrapper;
 import com.ardor3d.input.control.OrbitCamControl;
+import com.ardor3d.input.jogl.JoglNewtFocusWrapper;
+import com.ardor3d.input.jogl.JoglNewtKeyboardWrapper;
+import com.ardor3d.input.jogl.JoglNewtMouseManager;
+import com.ardor3d.input.jogl.JoglNewtMouseWrapper;
 import com.ardor3d.input.logical.DummyControllerWrapper;
 import com.ardor3d.input.logical.LogicalLayer;
 import com.ardor3d.intersection.PickResults;
@@ -51,7 +58,8 @@ import javax.swing.JPanel;
 public class ArdorPanel extends JPanel implements Scene, Updater, Runnable {
 
     private final Node root;
-    private final JoglSwingCanvas canvas;
+    //private final JoglSwingCanvas canvas;
+    private final JoglAwtCanvas canvas;
     private final Timer timer = new Timer();
     private final FrameHandler frameWork = new FrameHandler(timer);
     private final LogicalLayer logicalLayer = new LogicalLayer();
@@ -64,7 +72,7 @@ public class ArdorPanel extends JPanel implements Scene, Updater, Runnable {
 
     private final Mesh targetMesh = new Teapot("target");
     
-    private OrbitCamControl control;
+    private MouseControl control;
 
     public ArdorPanel() {
         System.setProperty("ardor3d.useMultipleContexts", "true");
@@ -74,7 +82,8 @@ public class ArdorPanel extends JPanel implements Scene, Updater, Runnable {
         final JoglCanvasRenderer canvasRenderer = new JoglCanvasRenderer(this);
 
         final DisplaySettings settings = new DisplaySettings(400, 300, 24, 0, 0, 16, 0, 0, false, false);
-        canvas = new JoglSwingCanvas(settings, canvasRenderer);
+        canvas = new JoglAwtCanvas(settings, canvasRenderer);
+        //canvas = new JoglSwingCanvas(settings, canvasRenderer);
         canvas.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
@@ -83,6 +92,7 @@ public class ArdorPanel extends JPanel implements Scene, Updater, Runnable {
             }
 
         });
+        add(canvas);
 
         mouseManager = new AwtMouseManager(canvas);
         pl = new PhysicalLayer(new AwtKeyboardWrapper(canvas),
@@ -95,7 +105,6 @@ public class ArdorPanel extends JPanel implements Scene, Updater, Runnable {
         frameWork.addUpdater(this);
         frameWork.addCanvas(canvas);
 
-        add(canvas);
     }
 
     @Override
@@ -149,16 +158,14 @@ public class ArdorPanel extends JPanel implements Scene, Updater, Runnable {
 
         root.getSceneHints().setRenderBucketType(RenderBucketType.Opaque);
         
-        // add Orbit handler - set it up to control the main camera
-        control = new OrbitCamControl(canvas.getCanvasRenderer().getCamera(), targetMesh);
+        control = new MouseControl(targetMesh);
         control.setupMouseTriggers(logicalLayer, true);
-        control.setSphereCoords(15, 0, 0);
-        control.setInvertedX(true);
-        control.setInvertedY(true);
 
         // setup some basics on the teapot.
         targetMesh.setModelBound(new BoundingBox());
-        targetMesh.setTranslation(new Vector3(0, 0, -15));
+        Vector3 transCent = targetMesh.getModelBound().getCenter().clone();
+        transCent.multiplyLocal(-1);
+        targetMesh.getMeshData().translatePoints(transCent);
         root.attachChild(targetMesh);
 
         root.updateGeometricState(0);
@@ -169,7 +176,6 @@ public class ArdorPanel extends JPanel implements Scene, Updater, Runnable {
         logicalLayer.checkTriggers(rot.getTimePerFrame());
         GameTaskQueueManager.getManager(canvas.getCanvasRenderer().getRenderContext()).getQueue(GameTaskQueue.UPDATE)
                 .execute();
-        control.update(timer.getTimePerFrame());
         root.updateGeometricState(rot.getTimePerFrame(), true);
     }
 
@@ -192,7 +198,7 @@ public class ArdorPanel extends JPanel implements Scene, Updater, Runnable {
         System.out.println("Showing");
     }
 
-    private static void resizeCanvas(JoglSwingCanvas canvas) {
+    private static void resizeCanvas(JoglAwtCanvas canvas) {
         int w = canvas.getWidth();
         int h = canvas.getHeight();
         double r = (double) w / (double) h;
@@ -213,6 +219,7 @@ public class ArdorPanel extends JPanel implements Scene, Updater, Runnable {
             frameWork.updateFrame();
             Thread.yield();
         }
+        System.gc();
     }
 
     @Override
