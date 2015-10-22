@@ -12,19 +12,11 @@ import com.ardor3d.framework.Scene;
 import com.ardor3d.framework.Updater;
 import com.ardor3d.framework.jogl.JoglCanvasRenderer;
 import com.ardor3d.framework.jogl.awt.JoglAwtCanvas;
-import com.ardor3d.framework.jogl.awt.JoglNewtAwtCanvas;
-import com.ardor3d.framework.jogl.awt.JoglSwingCanvas;
-import com.ardor3d.input.ControllerWrapper;
 import com.ardor3d.input.PhysicalLayer;
 import com.ardor3d.input.awt.AwtFocusWrapper;
 import com.ardor3d.input.awt.AwtKeyboardWrapper;
 import com.ardor3d.input.awt.AwtMouseManager;
 import com.ardor3d.input.awt.AwtMouseWrapper;
-import com.ardor3d.input.control.OrbitCamControl;
-import com.ardor3d.input.jogl.JoglNewtFocusWrapper;
-import com.ardor3d.input.jogl.JoglNewtKeyboardWrapper;
-import com.ardor3d.input.jogl.JoglNewtMouseManager;
-import com.ardor3d.input.jogl.JoglNewtMouseWrapper;
 import com.ardor3d.input.logical.DummyControllerWrapper;
 import com.ardor3d.input.logical.LogicalLayer;
 import com.ardor3d.intersection.PickResults;
@@ -159,7 +151,7 @@ public class ArdorPanel extends JPanel implements Scene, Updater, Runnable {
         root.getSceneHints().setRenderBucketType(RenderBucketType.Opaque);
         
         control = new MouseControl(targetMesh);
-        control.setupMouseTriggers(logicalLayer, true);
+        control.setupMouseTriggers(logicalLayer);
 
         // setup some basics on the teapot.
         targetMesh.setModelBound(new BoundingBox());

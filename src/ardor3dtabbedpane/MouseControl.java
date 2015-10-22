@@ -38,7 +38,11 @@ public class MouseControl {
         _lookAtSpatial = target;
     }
 
-    public void setupMouseTriggers(final LogicalLayer layer, final boolean dragOnly) {
+    public void setupMouseTriggers(final LogicalLayer layer) {
+        
+        if (layer == null){
+            return;
+        }
 
         final Predicate<TwoInputStates> scrollWheelMoved = new MouseWheelMovedCondition();
         final TriggerAction wheelZoomAction = new TriggerAction() {
@@ -117,12 +121,16 @@ public class MouseControl {
     }
 
     public void zoom(final double percent) {
-        if (_lookAtSpatial != null) {
-            _lookAtSpatial.setScale(Math.max(_lookAtSpatial.getScale().getX() + percent,0.000001));
+        if (_lookAtSpatial == null) {
+            return;
         }
+        _lookAtSpatial.setScale(Math.max(_lookAtSpatial.getScale().getX() + percent, 0.000001));
     }
 
     public void rotate(final double xDif, final double yDif) {
+        if (_lookAtSpatial == null) {
+            return;
+        }
         Matrix3 rotationMatrix = new Matrix3();
         rotationMatrix.fromAngles(-30 * yDif * MathUtils.DEG_TO_RAD, 30 * xDif * MathUtils.DEG_TO_RAD, 0.0);
         rotationMatrix.multiplyLocal(_lookAtSpatial.getRotation());
@@ -130,9 +138,12 @@ public class MouseControl {
     }
 
     public void translate(final double xDif, final double yDif) {
+        if (_lookAtSpatial == null) {
+            return;
+        }
         Vector3 trans = _lookAtSpatial.getTranslation().clone();
         trans.addLocal(xDif, yDif, 0);
-        
+
         _lookAtSpatial.setTranslation(trans);
     }
 }
