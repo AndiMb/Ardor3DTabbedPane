@@ -31,7 +31,8 @@ public class MouseControl {
     protected double _xSpeed = 0.01;
     protected double _ySpeed = 0.01;
 
-    protected double _zoomSpeed = 0.1;
+    protected double _zoomSpeedWheel = 0.1;
+    protected double _zoomSpeedDrag = 0.001;
 
     public MouseControl(final Spatial target) {
         _lookAtSpatial = target;
@@ -45,7 +46,7 @@ public class MouseControl {
             public void perform(final Canvas source, final TwoInputStates inputStates, final double tpf) {
                 final MouseState mouse = inputStates.getCurrent().getMouseState();
                 if (mouse.getDwheel() != 0) {
-                    zoom(_zoomSpeed * mouse.getDwheel());
+                    zoom(_zoomSpeedWheel * mouse.getDwheel());
                 }
             }
         };
@@ -84,7 +85,7 @@ public class MouseControl {
                 final MouseState mouse = inputStates.getCurrent().getMouseState();
                 if (mouse.getDy() != 0) {
                     if (!firstPing) {
-                        zoom(0.1 * _ySpeed * mouse.getDy());
+                        zoom(_zoomSpeedDrag * mouse.getDy());
                     } else {
                         firstPing = false;
                     }
