@@ -26,6 +26,7 @@ import com.ardor3d.math.Ray3;
 import com.ardor3d.math.Vector3;
 import com.ardor3d.renderer.Camera;
 import com.ardor3d.renderer.Renderer;
+import com.ardor3d.renderer.RendererCallable;
 import com.ardor3d.renderer.queue.RenderBucketType;
 import com.ardor3d.renderer.state.LightState;
 import com.ardor3d.renderer.state.ZBufferState;
@@ -38,6 +39,7 @@ import com.ardor3d.util.GameTaskQueueManager;
 import com.ardor3d.util.ReadOnlyTimer;
 import com.ardor3d.util.Timer;
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.util.Random;
@@ -63,8 +65,10 @@ public class ArdorPanel extends JPanel implements Scene, Updater, Runnable {
     private LightState lightState;
 
     private final Mesh targetMesh = new Teapot("target");
-    
+
     private MouseControl control;
+    
+    private Color background = Color.WHITE;
 
     public ArdorPanel() {
         System.setProperty("ardor3d.useMultipleContexts", "true");
@@ -84,6 +88,7 @@ public class ArdorPanel extends JPanel implements Scene, Updater, Runnable {
             }
 
         });
+        canvas.setBackground(background);
         add(canvas);
 
         mouseManager = new AwtMouseManager(canvas);
@@ -96,7 +101,6 @@ public class ArdorPanel extends JPanel implements Scene, Updater, Runnable {
 
         frameWork.addUpdater(this);
         frameWork.addCanvas(canvas);
-
     }
 
     @Override
@@ -104,6 +108,15 @@ public class ArdorPanel extends JPanel implements Scene, Updater, Runnable {
         // Execute renderQueue item
         GameTaskQueueManager.getManager(canvas.getCanvasRenderer().getRenderContext()).getQueue(GameTaskQueue.RENDER)
                 .execute(renderer);
+
+        // set background color
+        GameTaskQueueManager.getManager(canvas.getCanvasRenderer().getRenderContext()).render(new RendererCallable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                getRenderer().setBackgroundColor(new ColorRGBA(background.getRed(), background.getGreen(), background.getBlue(), background.getAlpha()));
+                return null;
+            }
+        });
         ContextGarbageCollector.doRuntimeCleanup(renderer);
 
         renderer.draw(root);
@@ -149,7 +162,7 @@ public class ArdorPanel extends JPanel implements Scene, Updater, Runnable {
         root.setRenderState(lightState);
 
         root.getSceneHints().setRenderBucketType(RenderBucketType.Opaque);
-        
+
         control = new MouseControl(targetMesh);
         control.setupMouseTriggers(logicalLayer);
 
