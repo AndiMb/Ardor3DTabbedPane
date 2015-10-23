@@ -68,7 +68,7 @@ public class ArdorPanel extends JPanel implements Scene, Updater, Runnable {
 
     private MouseControl control;
     
-    private Color background = Color.WHITE;
+    private final Color background = Color.WHITE;
 
     public ArdorPanel() {
         System.setProperty("ardor3d.useMultipleContexts", "true");
@@ -105,10 +105,6 @@ public class ArdorPanel extends JPanel implements Scene, Updater, Runnable {
 
     @Override
     public boolean renderUnto(Renderer renderer) {
-        // Execute renderQueue item
-        GameTaskQueueManager.getManager(canvas.getCanvasRenderer().getRenderContext()).getQueue(GameTaskQueue.RENDER)
-                .execute(renderer);
-
         // set background color
         GameTaskQueueManager.getManager(canvas.getCanvasRenderer().getRenderContext()).render(new RendererCallable<Void>() {
             @Override
@@ -117,6 +113,10 @@ public class ArdorPanel extends JPanel implements Scene, Updater, Runnable {
                 return null;
             }
         });
+        
+        // Execute renderQueue item
+        GameTaskQueueManager.getManager(canvas.getCanvasRenderer().getRenderContext()).getQueue(GameTaskQueue.RENDER)
+                .execute(renderer);
         ContextGarbageCollector.doRuntimeCleanup(renderer);
 
         renderer.draw(root);

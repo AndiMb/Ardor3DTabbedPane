@@ -39,8 +39,8 @@ public class MouseControl {
     }
 
     public void setupMouseTriggers(final LogicalLayer layer) {
-        
-        if (layer == null){
+
+        if (layer == null) {
             return;
         }
 
@@ -49,9 +49,7 @@ public class MouseControl {
             @Override
             public void perform(final Canvas source, final TwoInputStates inputStates, final double tpf) {
                 final MouseState mouse = inputStates.getCurrent().getMouseState();
-                if (mouse.getDwheel() != 0) {
-                    zoom(_zoomSpeedWheel * mouse.getDwheel());
-                }
+                zoom(_zoomSpeedWheel * mouse.getDwheel());
             }
         };
         layer.registerTrigger(new InputTrigger(scrollWheelMoved, wheelZoomAction));
@@ -66,12 +64,10 @@ public class MouseControl {
             @Override
             public void perform(final Canvas source, final TwoInputStates inputStates, final double tpf) {
                 final MouseState mouse = inputStates.getCurrent().getMouseState();
-                if (mouse.getDx() != 0 || mouse.getDy() != 0) {
-                    if (!firstPing) {
-                        rotate(_xSpeed * mouse.getDx(), _ySpeed * mouse.getDy());
-                    } else {
-                        firstPing = false;
-                    }
+                if (!firstPing) {
+                    rotate(_xSpeed * mouse.getDx(), _ySpeed * mouse.getDy());
+                } else {
+                    firstPing = false;
                 }
             }
         };
@@ -87,12 +83,10 @@ public class MouseControl {
             @Override
             public void perform(final Canvas source, final TwoInputStates inputStates, final double tpf) {
                 final MouseState mouse = inputStates.getCurrent().getMouseState();
-                if (mouse.getDy() != 0) {
-                    if (!firstPing) {
-                        zoom(_zoomSpeedDrag * mouse.getDy());
-                    } else {
-                        firstPing = false;
-                    }
+                if (!firstPing) {
+                    zoom(_zoomSpeedDrag * mouse.getDy());
+                } else {
+                    firstPing = false;
                 }
             }
         };
