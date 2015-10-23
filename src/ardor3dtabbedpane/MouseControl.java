@@ -102,12 +102,10 @@ public class MouseControl {
             @Override
             public void perform(final Canvas source, final TwoInputStates inputStates, final double tpf) {
                 final MouseState mouse = inputStates.getCurrent().getMouseState();
-                if (mouse.getDx() != 0 || mouse.getDy() != 0) {
-                    if (!firstPing) {
-                        translate(_xSpeed * mouse.getDx(), _ySpeed * mouse.getDy());
-                    } else {
-                        firstPing = false;
-                    }
+                if (!firstPing) {
+                    translate(_xSpeed * mouse.getDx(), _ySpeed * mouse.getDy());
+                } else {
+                    firstPing = false;
                 }
             }
         };
