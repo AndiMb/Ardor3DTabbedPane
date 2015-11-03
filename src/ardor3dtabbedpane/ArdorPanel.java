@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package ardor3dtabbedpane;
 
 import com.ardor3d.bounding.BoundingBox;
@@ -46,7 +41,7 @@ import javax.swing.JPanel;
 
 /**
  *
- * @author hauffe
+ * @author Andreas Hauffe
  */
 public class ArdorPanel extends JPanel implements Scene, Updater, Runnable {
 
@@ -103,8 +98,6 @@ public class ArdorPanel extends JPanel implements Scene, Updater, Runnable {
 
     @Override
     public boolean renderUnto(Renderer renderer) {
-        // Clean up card garbage such as textures, vbos, etc.
-        ContextGarbageCollector.doRuntimeCleanup(renderer);
 
         background.renderUnto(renderer);
 

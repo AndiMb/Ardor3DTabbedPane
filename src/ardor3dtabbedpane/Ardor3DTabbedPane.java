@@ -9,6 +9,7 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.LinkedList;
 import javax.swing.JButton;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -23,6 +24,8 @@ public class Ardor3DTabbedPane extends JFrame {
 
     private final JTabbedPane tabbedPane = new JTabbedPane();
     private ArdorPanel oldSelected = null;
+    
+    private LinkedList<ArdorPanel> tabbedPaneList = new LinkedList<>();
 
     public Ardor3DTabbedPane() {
         this.getContentPane().setLayout(new BorderLayout());
@@ -53,7 +56,10 @@ public class Ardor3DTabbedPane extends JFrame {
         addButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                ArdorPanel panel = new ArdorPanel();
+                ArdorPanel panel = tabbedPaneList.pollFirst();
+                if (panel == null){
+                    panel = new ArdorPanel();
+                }
                 panel.panelOpened();
                 tabbedPane.addTab("Tab " + number++, null, panel, "Does nothing at all");
                 tabbedPane.setSelectedComponent(panel);
@@ -70,6 +76,7 @@ public class Ardor3DTabbedPane extends JFrame {
                     tabbedPane.remove(panel);
                     System.out.println("removed");
                     panel.panelClosed();
+                    tabbedPaneList.offerFirst(panel);
                 }
             }
         });
