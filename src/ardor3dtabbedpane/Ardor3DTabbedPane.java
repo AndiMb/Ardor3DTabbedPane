@@ -66,7 +66,9 @@ public class Ardor3DTabbedPane extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 if (tabbedPane.getTabCount() > 0) {
                     ArdorPanel panel = (ArdorPanel) tabbedPane.getSelectedComponent();
+                    System.out.println("remove");
                     tabbedPane.remove(panel);
+                    System.out.println("removed");
                     panel.panelClosed();
                 }
             }

@@ -11,7 +11,7 @@ import com.ardor3d.framework.FrameHandler;
 import com.ardor3d.framework.Scene;
 import com.ardor3d.framework.Updater;
 import com.ardor3d.framework.jogl.JoglCanvasRenderer;
-import com.ardor3d.framework.jogl.awt.JoglAwtCanvas;
+import com.ardor3d.framework.jogl.awt.JoglSwingCanvas;
 import com.ardor3d.input.PhysicalLayer;
 import com.ardor3d.input.awt.AwtFocusWrapper;
 import com.ardor3d.input.awt.AwtKeyboardWrapper;
@@ -26,7 +26,6 @@ import com.ardor3d.math.Ray3;
 import com.ardor3d.math.Vector3;
 import com.ardor3d.renderer.Camera;
 import com.ardor3d.renderer.Renderer;
-import com.ardor3d.renderer.RendererCallable;
 import com.ardor3d.renderer.queue.RenderBucketType;
 import com.ardor3d.renderer.state.LightState;
 import com.ardor3d.renderer.state.ZBufferState;
@@ -34,14 +33,14 @@ import com.ardor3d.scenegraph.Mesh;
 import com.ardor3d.scenegraph.Node;
 import com.ardor3d.scenegraph.shape.Teapot;
 import com.ardor3d.util.ContextGarbageCollector;
-import com.ardor3d.util.GameTaskQueue;
-import com.ardor3d.util.GameTaskQueueManager;
 import com.ardor3d.util.ReadOnlyTimer;
 import com.ardor3d.util.Timer;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.font.TextAttribute;
+import java.text.AttributedString;
 import java.util.Random;
 import javax.swing.JPanel;
 
@@ -52,8 +51,9 @@ import javax.swing.JPanel;
 public class ArdorPanel extends JPanel implements Scene, Updater, Runnable {
 
     private final Node root;
-    //private final JoglSwingCanvas canvas;
-    private final JoglAwtCanvas canvas;
+    private final Node transform;
+    private final GradientBackground background;
+    private final JoglSwingCanvas canvas;
     private final Timer timer = new Timer();
     private final FrameHandler frameWork = new FrameHandler(timer);
     private final LogicalLayer logicalLayer = new LogicalLayer();
@@ -67,28 +67,26 @@ public class ArdorPanel extends JPanel implements Scene, Updater, Runnable {
     private final Mesh targetMesh = new Teapot("target");
 
     private MouseControl control;
-    
-    private final Color background = Color.WHITE;
 
     public ArdorPanel() {
         System.setProperty("ardor3d.useMultipleContexts", "true");
         setLayout(new BorderLayout());
         this.root = new Node("root");
+        this.transform = new Node("transform");
 
         final JoglCanvasRenderer canvasRenderer = new JoglCanvasRenderer(this);
 
         final DisplaySettings settings = new DisplaySettings(400, 300, 24, 0, 0, 16, 0, 0, false, false);
-        canvas = new JoglAwtCanvas(settings, canvasRenderer);
-        //canvas = new JoglSwingCanvas(settings, canvasRenderer);
+        canvas = new JoglSwingCanvas(settings, canvasRenderer);
         canvas.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
                 super.componentResized(e);
                 resizeCanvas(canvas);
             }
-
         });
-        canvas.setBackground(background);
+        this.background = new GradientBackground(canvas, new Color(100,100,255), Color.WHITE);
+
         add(canvas);
 
         mouseManager = new AwtMouseManager(canvas);
@@ -105,21 +103,12 @@ public class ArdorPanel extends JPanel implements Scene, Updater, Runnable {
 
     @Override
     public boolean renderUnto(Renderer renderer) {
-        // set background color
-        GameTaskQueueManager.getManager(canvas.getCanvasRenderer().getRenderContext()).render(new RendererCallable<Void>() {
-            @Override
-            public Void call() throws Exception {
-                getRenderer().setBackgroundColor(new ColorRGBA(background.getRed(), background.getGreen(), background.getBlue(), background.getAlpha()));
-                return null;
-            }
-        });
-        
-        // Execute renderQueue item
-        GameTaskQueueManager.getManager(canvas.getCanvasRenderer().getRenderContext()).getQueue(GameTaskQueue.RENDER)
-                .execute(renderer);
+        // Clean up card garbage such as textures, vbos, etc.
         ContextGarbageCollector.doRuntimeCleanup(renderer);
 
-        renderer.draw(root);
+        background.renderUnto(renderer);
+
+        transform.draw(renderer);
         return true;
     }
 
@@ -163,7 +152,7 @@ public class ArdorPanel extends JPanel implements Scene, Updater, Runnable {
 
         root.getSceneHints().setRenderBucketType(RenderBucketType.Opaque);
 
-        control = new MouseControl(targetMesh);
+        control = new MouseControl(transform);
         control.setupMouseTriggers(logicalLayer);
 
         // setup some basics on the teapot.
@@ -171,7 +160,24 @@ public class ArdorPanel extends JPanel implements Scene, Updater, Runnable {
         Vector3 transCent = targetMesh.getModelBound().getCenter().clone();
         transCent.multiplyLocal(-1);
         targetMesh.getMeshData().translatePoints(transCent);
-        root.attachChild(targetMesh);
+        transform.attachChild(targetMesh);
+        
+        // add some RasterTextLabel
+        AttributedString cap1 = new AttributedString("(x1,y1,z1)");
+        cap1.addAttribute(TextAttribute.SUPERSCRIPT, TextAttribute.SUPERSCRIPT_SUB, 2, 3);
+        cap1.addAttribute(TextAttribute.SUPERSCRIPT, TextAttribute.SUPERSCRIPT_SUB, 5, 6);
+        cap1.addAttribute(TextAttribute.SUPERSCRIPT, TextAttribute.SUPERSCRIPT_SUB, 8, 9);
+        cap1.addAttribute(TextAttribute.SIZE, 20);
+        BoundingBox bBox = (BoundingBox)targetMesh.getModelBound(new BoundingBox());
+        transform.attachChild(new RasterTextLabel(cap1, 
+                Color.BLACK, 
+                bBox.getCenter().getX()+bBox.getXExtent()+transCent.getX(), 
+                bBox.getCenter().getY()+bBox.getYExtent()+transCent.getY(), 
+                bBox.getCenter().getZ()+transCent.getZ()));
+        
+
+        root.attachChild(transform);
+        root.attachChild(background);
 
         root.updateGeometricState(0);
     }
@@ -179,31 +185,28 @@ public class ArdorPanel extends JPanel implements Scene, Updater, Runnable {
     @Override
     public void update(ReadOnlyTimer rot) {
         logicalLayer.checkTriggers(rot.getTimePerFrame());
-        GameTaskQueueManager.getManager(canvas.getCanvasRenderer().getRenderContext()).getQueue(GameTaskQueue.UPDATE)
-                .execute();
         root.updateGeometricState(rot.getTimePerFrame(), true);
     }
 
+    Thread thread;
+
     public void panelOpened() {
-        System.out.println("Opened");
         exit = false;
-        new Thread(this).start();
+        thread = new Thread(this);
+        thread.start();
     }
 
     public void panelClosed() {
-        System.out.println("Closed");
         exit = true;
     }
 
     protected void panelHidden() {
-        System.out.println("Hidden");
     }
 
     protected void panelShowing() {
-        System.out.println("Showing");
     }
 
-    private static void resizeCanvas(JoglAwtCanvas canvas) {
+    private static void resizeCanvas(JoglSwingCanvas canvas) {
         int w = canvas.getWidth();
         int h = canvas.getHeight();
         double r = (double) w / (double) h;
@@ -224,7 +227,6 @@ public class ArdorPanel extends JPanel implements Scene, Updater, Runnable {
             frameWork.updateFrame();
             Thread.yield();
         }
-        System.gc();
     }
 
     @Override

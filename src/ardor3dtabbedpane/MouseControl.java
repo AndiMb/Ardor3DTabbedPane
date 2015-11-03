@@ -28,11 +28,15 @@ public class MouseControl {
 
     protected Spatial _lookAtSpatial = null;
 
-    protected double _xSpeed = 0.01;
-    protected double _ySpeed = 0.01;
+    protected double _xSpeedRotate = 0.01;
+    protected double _ySpeedRotate = 0.01;
+    protected double _xSpeedMove = 0.001;
+    protected double _ySpeedMove = 0.001;
 
-    protected double _zoomSpeedWheel = 0.1;
-    protected double _zoomSpeedDrag = 0.001;
+    protected double _zoomSpeedWheel = 0.02;
+    protected double _zoomSpeedDrag = 0.01;
+    
+    //protected double scale_factor = 1.02;
 
     public MouseControl(final Spatial target) {
         _lookAtSpatial = target;
@@ -57,18 +61,10 @@ public class MouseControl {
         final Predicate<TwoInputStates> leftDownMouseMoved = Predicates.and(TriggerConditions.leftButtonDown(),
                 TriggerConditions.mouseMoved());
         final TriggerAction rotationAction = new TriggerAction() {
-
-            // Test boolean to allow us to ignore first mouse event. First event can wildly vary based on platform.
-            private boolean firstPing = true;
-
             @Override
             public void perform(final Canvas source, final TwoInputStates inputStates, final double tpf) {
                 final MouseState mouse = inputStates.getCurrent().getMouseState();
-                if (!firstPing) {
-                    rotate(_xSpeed * mouse.getDx(), _ySpeed * mouse.getDy());
-                } else {
-                    firstPing = false;
-                }
+                rotate(_xSpeedRotate * mouse.getDx(), _ySpeedRotate * mouse.getDy());
             }
         };
         layer.registerTrigger(new InputTrigger(leftDownMouseMoved, rotationAction));
@@ -76,18 +72,10 @@ public class MouseControl {
         final Predicate<TwoInputStates> middleDownMouseMoved = Predicates.and(TriggerConditions.middleButtonDown(),
                 TriggerConditions.mouseMoved());
         final TriggerAction mouseZoomAction = new TriggerAction() {
-
-            // Test boolean to allow us to ignore first mouse event. First event can wildly vary based on platform.
-            private boolean firstPing = true;
-
             @Override
             public void perform(final Canvas source, final TwoInputStates inputStates, final double tpf) {
                 final MouseState mouse = inputStates.getCurrent().getMouseState();
-                if (!firstPing) {
-                    zoom(_zoomSpeedDrag * mouse.getDy());
-                } else {
-                    firstPing = false;
-                }
+                zoom(_zoomSpeedDrag * mouse.getDy());
             }
         };
         layer.registerTrigger(new InputTrigger(middleDownMouseMoved, mouseZoomAction));
@@ -95,18 +83,10 @@ public class MouseControl {
         final Predicate<TwoInputStates> rightDownMouseMoved = Predicates.and(TriggerConditions.rightButtonDown(),
                 TriggerConditions.mouseMoved());
         final TriggerAction mouseTranslateAction = new TriggerAction() {
-
-            // Test boolean to allow us to ignore first mouse event. First event can wildly vary based on platform.
-            private boolean firstPing = true;
-
             @Override
             public void perform(final Canvas source, final TwoInputStates inputStates, final double tpf) {
                 final MouseState mouse = inputStates.getCurrent().getMouseState();
-                if (!firstPing) {
-                    translate(_xSpeed * mouse.getDx(), _ySpeed * mouse.getDy());
-                } else {
-                    firstPing = false;
-                }
+                translate(_xSpeedMove * mouse.getDx(), _ySpeedMove * mouse.getDy());
             }
         };
         layer.registerTrigger(new InputTrigger(rightDownMouseMoved, mouseTranslateAction));
@@ -116,7 +96,13 @@ public class MouseControl {
         if (_lookAtSpatial == null) {
             return;
         }
-        _lookAtSpatial.setScale(Math.max(_lookAtSpatial.getScale().getX() + percent, 0.000001));
+        double factor = 1.0 + percent;
+        if (percent < 0.0){
+            factor = 1.0/(1.0 - percent);
+        }
+        _lookAtSpatial.setScale(Math.max(_lookAtSpatial.getScale().getX()*factor, 0.000001), 
+                                Math.max(_lookAtSpatial.getScale().getY()*factor, 0.000001), 
+                                Math.max(_lookAtSpatial.getScale().getZ()*factor, 0.000001));
     }
 
     public void rotate(final double xDif, final double yDif) {
